@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Nova Evolução - Paciente</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a th:href="@{/}">Início</a> |
+            <a th:href="@{|/medicalrecords?patientId=${record.patient.id}|}">Voltar às Evoluções</a> |
+            <a th:href="@{/logout}">Sair</a>
+        </nav>
+    </header>
+    <main>
+        <h2 th:text="'Registrar Evolução para ' + ${record.patient.name}"></h2>
+        <form th:action="@{/medicalrecords}" th:object="${record}" method="post">
+            <input type="hidden" th:field="*{patient.id}" />
+            <div>
+                <label>Data e Hora:</label>
+                <input type="datetime-local" th:field="*{recordDateTime}" required />
+                <span th:if="${#fields.hasErrors('recordDateTime')}" th:errors="*{recordDateTime}"></span>
+            </div>
+            <div>
+                <label>Descrição da Evolução:</label>
+                <textarea th:field="*{description}" rows="5" cols="50" required></textarea>
+                <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+            </div>
+            <div>
+                <button type="submit">Salvar Evolução</button>
+            </div>
+        </form>
+    </main>
+</body>
+
+</html>

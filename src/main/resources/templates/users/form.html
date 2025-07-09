@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${user.id == null} ? 'Novo Usuário' : 'Editar Usuário'">Formulário Usuário</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 10px 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo {
+            max-width: 80px;
+            height: auto;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav li {
+            position: relative;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            padding: 8px 12px;
+            display: block;
+        }
+
+        nav a:hover {
+            background-color: #e0e0e0;
+            border-radius: 5px;
+        }
+
+        nav ul ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        nav ul li:hover>ul {
+            display: block;
+        }
+
+        nav ul ul li {
+            width: 100%;
+        }
+
+        .profile-container {
+            position: relative;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        .profile-menu a,
+        .profile-menu span {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+            font-weight: normal;
+        }
+
+        .profile-menu a:hover {
+            background-color: #f0f0f0;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        form div {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #1a252f;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="left-header">
+            <div class="logo-container">
+                <img th:src="@{/images/logo.png}" alt="Logo" class="logo" />
+            </div>
+
+            <nav>
+                <ul>
+                    <li><a th:href="@{/}">Início</a></li>
+                    <li>
+                        <a href="#">Pacientes</a>
+                        <ul>
+                            <li><a th:href="@{/patients/new}">Novo Paciente</a></li>
+                            <li><a th:href="@{/patients}">Listar Pacientes</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#">Agendamentos</a>
+                        <ul>
+                            <li><a th:href="@{/appointments/new}">Novo Agendamento</a></li>
+                            <li><a th:href="@{/appointments}">Listar Agendamentos</a></li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_DOCTOR')">
+                        <a href="#">Evoluções</a>
+                        <ul>
+                            <li><a th:href="@{/medicalrecords?patientId=1}">Visualizar Evoluções</a></li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_ADMIN')">
+                        <a href="#">Usuários</a>
+                        <ul>
+                            <li><a th:href="@{/users/new}">Novo Usuário</a></li>
+                            <li><a th:href="@{/users}">Listar Usuários</a></li>
+                        </ul>
+                    </li>
+                    <!-- <li><a th:href="@{/logout}">Sair</a></li> -->
+                </ul>
+            </nav>
+        </div>
+
+        <div class="profile-container">
+            <img th:src="@{/images/perfil.png}" alt="Perfil" class="profile-icon" onclick="toggleProfileMenu()" />
+            <div class="profile-menu" id="profileMenu">
+                <span style="display: block; padding: 10px; font-weight: bold; color: #2c3e50;">
+                    <span sec:authorize="hasRole('ROLE_ADMIN')">Perfil: Administrador</span>
+                    <span sec:authorize="hasRole('ROLE_RECEPTIONIST')">Perfil: Recepcionista</span>
+                    <span sec:authorize="hasRole('ROLE_DOCTOR')">Perfil: Médico</span>
+                </span>
+                <a th:href="@{/logout}">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <h2 th:text="${user.id == null} ? 'Cadastrar Novo Usuário' : 'Editar Usuário'"></h2>
+
+        <form th:action="${user.id == null} ? @{/users} : @{/users/{id}(id=${user.id})}" th:object="${user}"
+            method="post">
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" id="username" th:field="*{username}" required />
+                <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+            </div>
+
+            <div th:if="${user.id == null}">
+                <label for="password">Senha:</label>
+                <input type="password" id="password" th:field="*{password}" required />
+                <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+            </div>
+
+            <div>
+                <label for="fullName">Nome Completo:</label>
+                <input type="text" id="fullName" th:field="*{fullName}" required />
+                <span th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></span>
+            </div>
+
+            <div>
+                <label>Perfis:</label>
+                <div th:each="role : ${allRoles}">
+                    <input type="checkbox" th:value="${role.id}" th:name="rolesSelected"
+                        th:checked="${user.roles.contains(role)}" id="role__${role.id}" />
+                    <label th:for="'role__' + ${role.id}" th:text="${role.name}"></label>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" th:text="${user.id == null} ? 'Salvar' : 'Atualizar'"></button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        function toggleProfileMenu() {
+            const menu = document.getElementById("profileMenu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+
+        document.addEventListener("click", function (event) {
+            const menu = document.getElementById("profileMenu");
+            const profileIcon = document.querySelector(".profile-icon");
+            if (!menu.contains(event.target) && !profileIcon.contains(event.target)) {
+                menu.style.display = "none";
+            }
+        });
+    </script>
+</body>
+
+</html>

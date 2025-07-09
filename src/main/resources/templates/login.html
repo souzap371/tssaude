@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login - TS SAUDE</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f5f5f5;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 20px;
+        }
+
+        form div {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        form input {
+            width: 100%;
+            padding: 8px;
+        }
+
+        form button {
+            width: 100%;
+            padding: 10px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background-color: #1a252f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Logo da empresa -->
+        <img th:src="@{/images/logo.png}" alt="Logo" class="logo" />
+
+        <h3 style="margin-top: 5px; margin-bottom: 20px; color: #333;">TS SAÚDE</h3>
+
+        <form th:action="@{/login}" method="post">
+            <div>
+                <label>Usuário:</label>
+                <input type="text" name="username" required />
+            </div>
+            <div>
+                <label>Senha:</label>
+                <input type="password" name="password" required />
+            </div>
+            <div>
+                <button type="submit">Entrar</button>
+            </div>
+
+            <!-- Mensagem de erro -->
+            <div th:if="${errorMessage}">
+                <p style="color:red;" th:text="${errorMessage}"></p>
+            </div>
+
+            <!-- Mensagem de logout -->
+            <div th:if="${logoutMessage}">
+                <p style="color:green;" th:text="${logoutMessage}"></p>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

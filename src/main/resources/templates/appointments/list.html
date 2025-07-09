@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Lista de Agendamentos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 10px 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo {
+            max-width: 80px;
+            height: auto;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav li {
+            position: relative;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            padding: 8px 12px;
+            display: block;
+        }
+
+        nav a:hover {
+            background-color: #e0e0e0;
+            border-radius: 5px;
+        }
+
+        nav ul ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        nav ul li:hover>ul {
+            display: block;
+        }
+
+        nav ul ul li {
+            width: 100%;
+        }
+
+        .profile-container {
+            position: relative;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        .profile-menu a,
+        .profile-menu span {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+            font-weight: normal;
+        }
+
+        .profile-menu a:hover {
+            background-color: #f0f0f0;
+        }
+
+        main {
+            flex: 1;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        a.action-link {
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a.action-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilo para status colorido */
+        .status-scheduled {
+            background-color: #28a745;
+            /* verde */
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-canceled {
+            background-color: #dc3545;
+            /* vermelho */
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status-completed {
+            background-color: #007bff;
+            /* azul */
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="left-header">
+            <div class="logo-container">
+                <img th:src="@{/images/logo.png}" alt="Logo" class="logo" />
+            </div>
+            <nav>
+                <ul>
+                    <li><a th:href="@{/}">Início</a></li>
+                    <li>
+                        <a href="#">Pacientes</a>
+                        <ul>
+                            <li><a th:href="@{/patients/new}">Novo Paciente</a></li>
+                            <li><a th:href="@{/patients}">Listar Pacientes</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#">Agendamentos</a>
+                        <ul>
+                            <li><a th:href="@{/appointments/new}">Novo Agendamento</a></li>
+                            <li><a th:href="@{/appointments}">Listar Agendamentos</a></li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_DOCTOR')">
+                        <a href="#">Evoluções</a>
+                        <ul>
+                            <li><a th:href="@{/medicalrecords?patientId=1}">Visualizar Evoluções</a></li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_ADMIN')">
+                        <a href="#">Usuários</a>
+                        <ul>
+                            <li><a th:href="@{/users/new}">Novo Usuário</a></li>
+                            <li><a th:href="@{/users}">Listar Usuários</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="profile-container">
+            <img th:src="@{/images/perfil.png}" alt="Perfil" class="profile-icon" onclick="toggleProfileMenu()" />
+            <div class="profile-menu" id="profileMenu">
+                <span style="padding: 10px; font-weight: bold; color: #2c3e50;">
+                    <span sec:authorize="hasRole('ROLE_ADMIN')">Perfil: Administrador</span>
+                    <span sec:authorize="hasRole('ROLE_RECEPTIONIST')">Perfil: Recepcionista</span>
+                    <span sec:authorize="hasRole('ROLE_DOCTOR')">Perfil: Médico</span>
+                </span>
+                <a th:href="@{/logout}">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <h2>Agendamentos</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Paciente</th>
+                    <th>Médico</th>
+                    <th>Data/Hora</th>
+                    <th>Recepcionista</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="appt : ${appointments}">
+                    <td th:text="${appt.id}"></td>
+                    <td th:text="${appt.patient.name}"></td>
+                    <td th:text="${appt.doctor.fullName}"></td>
+                    <td th:text="${#temporals.format(appt.appointmentDateTime, 'dd/MM/yyyy HH:mm')}"></td>
+                    <td th:text="${appt.receptionist != null ? appt.receptionist.fullName : '-'}"></td>
+                    <td>
+                        <span th:text="${appt.status}" th:class="'status-' + ${#strings.toLowerCase(appt.status)}">
+                        </span>
+                    </td>
+
+
+                    <td>
+                        <a th:href="@{|/appointments/edit/${appt.id}|}" class="action-link">Editar</a> |
+                        <a th:href="@{|/appointments/delete/${appt.id}|}" class="action-link"
+                            th:onclick="|return confirm('Deseja realmente excluir o agendamento ID ${appt.id}?');|">Excluir</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        function toggleProfileMenu() {
+            const menu = document.getElementById("profileMenu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+
+        document.addEventListener("click", function (event) {
+            const menu = document.getElementById("profileMenu");
+            const profileIcon = document.querySelector(".profile-icon");
+            if (!menu.contains(event.target) && !profileIcon.contains(event.target)) {
+                menu.style.display = "none";
+            }
+        });
+    </script>
+</body>
+
+</html>
