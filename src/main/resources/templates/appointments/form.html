@@ -76,10 +76,6 @@
             display: block;
         }
 
-        nav ul ul li {
-            width: 100%;
-        }
-
         .profile-container {
             position: relative;
         }
@@ -111,7 +107,6 @@
             padding: 10px;
             text-decoration: none;
             color: #333;
-            font-weight: normal;
         }
 
         .profile-menu a:hover {
@@ -120,16 +115,13 @@
 
         main {
             flex: 1;
+            display: flex;
+            gap: 20px;
             padding: 20px;
         }
 
-        h2 {
-            text-align: center;
-        }
-
         form {
-            max-width: 500px;
-            margin: auto;
+            width: 400px;
             background: white;
             padding: 30px;
             border-radius: 8px;
@@ -166,9 +158,16 @@
             background-color: #1a252f;
         }
 
-        a {
-            text-decoration: none;
-            color: #2c3e50;
+        #calendar {
+            flex: 1;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .green-text {
+            color: green;
             font-weight: bold;
         }
 
@@ -185,12 +184,10 @@
 
 <body>
     <header>
-        <!-- Lado esquerdo: logo + menu -->
         <div class="left-header">
             <div class="logo-container">
                 <img th:src="@{/images/logo.png}" alt="Logo" class="logo" />
             </div>
-
             <nav>
                 <ul>
                     <li><a th:href="@{/}">Início</a></li>
@@ -221,12 +218,10 @@
                             <li><a th:href="@{/users}">Listar Usuários</a></li>
                         </ul>
                     </li>
-                    <!-- <li><a th:href="@{/logout}">Sair</a></li> -->
                 </ul>
             </nav>
         </div>
 
-        <!-- Lado direito: ícone do usuário + submenu -->
         <div class="profile-container">
             <img th:src="@{/images/perfil.png}" alt="Perfil" class="profile-icon" onclick="toggleProfileMenu()" />
             <div class="profile-menu" id="profileMenu">
@@ -241,8 +236,7 @@
     </header>
 
     <main>
-        <h2 th:text="${appointment.id == null} ? 'Agendar Consulta' : 'Editar Agendamento'"></h2>
-
+        <!-- Formulário na coluna esquerda -->
         <form th:action="${appointment.id == null} ? @{/appointments} : @{/appointments/{id}(id=${appointment.id})}"
             th:object="${appointment}" method="post">
 
@@ -252,22 +246,19 @@
                     <option value="" disabled>Selecione</option>
                     <option th:each="p : ${patients}" th:value="${p.id}" th:text="${p.name}"></option>
                 </select>
-                <span th:if="${#fields.hasErrors('patient')}" th:errors="*{patient}"></span>
             </div>
 
             <div>
                 <label for="doctorSelect">Médico:</label>
-                <select id="doctorSelect" th:field="*{doctor.id}">
+                <select id="doctorSelect" th:field="*{doctor.id}" onchange="updateCalendar()">
                     <option value="" disabled>Selecione</option>
                     <option th:each="d : ${doctors}" th:value="${d.id}" th:text="${d.fullName}"></option>
                 </select>
-                <span th:if="${#fields.hasErrors('doctor')}" th:errors="*{doctor}"></span>
             </div>
 
             <div>
                 <label for="appointmentDateTime">Data e Hora:</label>
                 <input id="appointmentDateTime" type="datetime-local" th:field="*{appointmentDateTime}" required />
-                <span th:if="${#fields.hasErrors('appointmentDateTime')}" th:errors="*{appointmentDateTime}"></span>
             </div>
 
             <div>
@@ -277,7 +268,6 @@
                     <option th:each="s : ${T(com.ts.saude.model.Appointment$AppointmentStatus).values()}"
                         th:value="${s}" th:text="${s.name()}"></option>
                 </select>
-                <span th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></span>
             </div>
 
             <div>
@@ -285,6 +275,12 @@
                 <a th:href="@{/appointments}" style="margin-left: 10px;">Cancelar</a>
             </div>
         </form>
+
+        <!-- Agenda à direita -->
+        <div id="calendar">
+            <h3>Agenda do Médico</h3>
+            <div id="availability">Selecione um médico para visualizar a agenda.</div>
+        </div>
     </main>
 
     <footer>
@@ -304,6 +300,54 @@
                 menu.style.display = "none";
             }
         });
+
+        function updateCalendar() {
+            const doctorSelect = document.getElementById('doctorSelect');
+            const doctorId = doctorSelect.value;
+            const availabilityDiv = document.getElementById('availability');
+
+            if (!doctorId || doctorId === "{id}") {
+                availabilityDiv.innerHTML = 'Selecione um médico válido para visualizar a agenda.';
+                return;
+            }
+
+            console.log('Doctor ID selecionado:', doctorId); // Para debug no console
+
+            fetch(`/appointments/doctors/${doctorId}/availability`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta da API');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Dados recebidos:', data);
+                    if (!data.availableDays || !data.availableHours) {
+                        availabilityDiv.innerHTML = 'Nenhuma disponibilidade encontrada para este médico.';
+                        return;
+                    }
+                    let html = '<p><strong>Dias Disponíveis:</strong></p><ul>';
+                    data.availableDays.forEach(day => {
+                        html += `<li class="green-text">${day}</li>`;
+                    });
+                    html += '</ul><p><strong>Horários:</strong></p><ul>';
+                    data.availableHours.forEach(hour => {
+                        html += `<li class="green-text">${hour}</li>`;
+                    });
+                    html += '</ul>';
+                    availabilityDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar disponibilidade:', error);
+                    availabilityDiv.innerHTML = 'Erro ao carregar disponibilidade.';
+                });
+        }
+
+
+        window.onload = () => {
+            const selectedDoctor = document.getElementById('doctorSelect').value;
+            if (selectedDoctor) updateCalendar();
+        };
     </script>
 </body>
 

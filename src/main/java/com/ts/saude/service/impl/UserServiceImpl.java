@@ -59,14 +59,24 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User save(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        Set<Role> rolesPersisted = new HashSet<>();
-        for (Role role : user.getRoles()) {
-            Role r = roleRepository.findByName(role.getName()).orElseThrow(
-                    () -> new RuntimeException("Role não encontrada: " + role.getName()));
-            rolesPersisted.add(r);
+        if (user.getId() != null) {
+            // Atualização: buscar usuário atual no banco
+            User existente = userRepository.findById(user.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
+
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                user.setPassword(existente.getPassword()); // mantém a senha atual
+            } else {
+                user.setPassword(passwordEncoder.encode(user.getPassword())); // nova senha
+            }
+        } else {
+            // Novo usuário
+            if (user.getPassword() == null || user.getPassword().isBlank()) {
+                throw new IllegalArgumentException("Senha é obrigatória para novo usuário");
+            }
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
-        user.setRoles(rolesPersisted);
+
         return userRepository.save(user);
     }
 

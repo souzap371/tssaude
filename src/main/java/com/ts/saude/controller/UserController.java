@@ -1,5 +1,6 @@
 package com.ts.saude.controller;
 
+import com.ts.saude.model.MedicoAgenda;
 import com.ts.saude.model.Role;
 import com.ts.saude.model.User;
 import com.ts.saude.repository.RoleRepository;
@@ -10,19 +11,11 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-/**
- * Administra operações de CRUD de usuários:
- * - Listar todos os usuários (GET /users)
- * - Exibir formulário de criação (GET /users/new)
- * - Salvar novo usuário (POST /users)
- * - Exibir formulário de edição (GET /users/edit/{id})
- * - Atualizar usuário (POST /users/{id})
- * - Excluir usuário (GET /users/delete/{id})
- */
 @Controller
 @RequestMapping("/users")
 public class UserController {
@@ -53,11 +46,16 @@ public class UserController {
     public String saveUser(@Valid User user,
             BindingResult result,
             @RequestParam(value = "rolesSelected", required = false) List<Long> rolesSelected,
+            @RequestParam(value = "availableDays", required = false) List<String> availableDays,
+            @RequestParam(value = "availableHours", required = false) List<String> availableHours,
+            @RequestParam(value = "appointmentDuration", required = false) Integer appointmentDuration,
             Model model) {
+
         if (result.hasErrors()) {
             model.addAttribute("allRoles", roleRepository.findAll());
             return "users/form";
         }
+
         // Carregar roles selecionadas
         Set<Role> roles = new HashSet<>();
         if (rolesSelected != null) {
@@ -68,6 +66,17 @@ public class UserController {
             }
         }
         user.setRoles(roles);
+
+        boolean isDoctor = roles.stream().anyMatch(role -> role.getName().equals("ROLE_DOCTOR"));
+        if (isDoctor) {
+            MedicoAgenda agenda = new MedicoAgenda();
+            agenda.setDiasAtendimento(availableDays);
+            agenda.setHorariosDisponiveis(availableHours);
+            agenda.setDuracaoConsulta(appointmentDuration);
+            agenda.setUser(user);
+            user.setMedicoAgenda(agenda); // importantíssimo para persistência em cascata
+        }
+
         userService.save(user);
         return "redirect:/users";
     }
@@ -94,6 +103,7 @@ public class UserController {
             model.addAttribute("allRoles", roleRepository.findAll());
             return "users/form";
         }
+
         // Carregar roles selecionadas
         Set<Role> roles = new HashSet<>();
         if (rolesSelected != null) {
@@ -105,6 +115,7 @@ public class UserController {
         }
         user.setId(id);
         user.setRoles(roles);
+
         userService.save(user);
         return "redirect:/users";
     }

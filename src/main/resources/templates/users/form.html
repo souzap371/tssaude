@@ -43,10 +43,6 @@
             gap: 20px;
         }
 
-        nav li {
-            position: relative;
-        }
-
         nav a {
             text-decoration: none;
             color: #333;
@@ -73,10 +69,6 @@
 
         nav ul li:hover>ul {
             display: block;
-        }
-
-        nav ul ul li {
-            width: 100%;
         }
 
         .profile-container {
@@ -212,7 +204,6 @@
                             <li><a th:href="@{/users}">Listar Usuários</a></li>
                         </ul>
                     </li>
-                    <!-- <li><a th:href="@{/logout}">Sair</a></li> -->
                 </ul>
             </nav>
         </div>
@@ -257,10 +248,45 @@
                 <label>Perfis:</label>
                 <div th:each="role : ${allRoles}">
                     <input type="checkbox" th:value="${role.id}" th:name="rolesSelected"
-                        th:checked="${user.roles.contains(role)}" id="role__${role.id}" />
+                        th:checked="${user.roles.contains(role)}" th:data-role-name="${role.name}" id="role__${role.id}"
+                        onchange="checkDoctorRole()" />
                     <label th:for="'role__' + ${role.id}" th:text="${role.name}"></label>
                 </div>
             </div>
+
+            <!-- Campos adicionais para médicos -->
+            <div id="doctorFields"
+                style="display: none; margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
+                <h4>Informações de Atendimento Médico</h4>
+
+                <!-- Duração da Consulta -->
+                <div>
+                    <label for="appointmentDuration">Duração da Consulta (min):</label>
+                    <input type="number" id="appointmentDuration" name="appointmentDuration" placeholder="Ex: 30"
+                        min="5" step="5" onchange="generateTimeSlots()" />
+                </div>
+
+                <!-- Dias de atendimento -->
+                <div>
+                    <label>Dias de Atendimento:</label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <label><input type="checkbox" name="availableDays" value="Segunda">Segunda</label>
+                        <label><input type="checkbox" name="availableDays" value="Terça">Terça</label>
+                        <label><input type="checkbox" name="availableDays" value="Quarta">Quarta</label>
+                        <label><input type="checkbox" name="availableDays" value="Quinta">Quinta</label>
+                        <label><input type="checkbox" name="availableDays" value="Sexta">Sexta</label>
+                        <label><input type="checkbox" name="availableDays" value="Sábado">Sábado</label>
+                        <label><input type="checkbox" name="availableDays" value="Domingo">Domingo</label>
+                    </div>
+                </div>
+
+                <!-- Horários disponíveis -->
+                <div>
+                    <label>Horários Disponíveis:</label>
+                    <div id="timeSlotsContainer" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+                </div>
+            </div>
+
 
             <div>
                 <button type="submit" th:text="${user.id == null} ? 'Salvar' : 'Atualizar'"></button>
@@ -281,6 +307,52 @@
                 menu.style.display = "none";
             }
         });
+
+        function checkDoctorRole() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][name="rolesSelected"]');
+            let isDoctor = false;
+            checkboxes.forEach(checkbox => {
+                const roleName = checkbox.getAttribute('data-role-name');
+                if (roleName === 'ROLE_DOCTOR' && checkbox.checked) {
+                    isDoctor = true;
+                }
+            });
+
+            const doctorFields = document.getElementById('doctorFields');
+            doctorFields.style.display = isDoctor ? 'block' : 'none';
+            if (isDoctor) generateTimeSlots(); // atualizar horários se necessário
+        }
+
+        // Gera horários com base na duração
+        function generateTimeSlots() {
+            const container = document.getElementById("timeSlotsContainer");
+            const durationInput = document.getElementById("appointmentDuration");
+            const duration = parseInt(durationInput.value);
+            container.innerHTML = "";
+
+            if (!duration || duration < 5) return;
+
+            const startHour = 8;
+            const endHour = 18;
+            const slots = [];
+
+            for (let hour = startHour; hour < endHour; hour++) {
+                for (let min = 0; min < 60; min += duration) {
+                    let h = hour.toString().padStart(2, '0');
+                    let m = min.toString().padStart(2, '0');
+                    slots.push(`${h}:${m}`);
+                }
+            }
+
+            slots.forEach(time => {
+                const label = document.createElement("label");
+                label.innerHTML = `<input type="checkbox" name="availableHours" value="${time}">${time}`;
+                label.style.marginRight = "10px";
+                container.appendChild(label);
+            });
+        }
+
+        window.onload = checkDoctorRole;
     </script>
 </body>
 

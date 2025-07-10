@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.JoinColumn;
 
@@ -27,6 +29,9 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 public class User implements UserDetails {
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private MedicoAgenda medicoAgenda;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
