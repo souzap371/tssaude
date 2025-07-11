@@ -36,7 +36,11 @@ public class UserController {
 
     // Exibir formulário para novo usuário
     @GetMapping("/new")
-    public String showUserForm(User user, Model model) {
+    public String showUserForm(Model model) {
+        User user = new User();
+        user.setMedicoAgenda(new MedicoAgenda()); // inicializa para não ser null
+
+        model.addAttribute("user", user);
         model.addAttribute("allRoles", roleRepository.findAll());
         return "users/form";
     }
@@ -73,7 +77,7 @@ public class UserController {
             agenda.setDiasAtendimento(availableDays);
             agenda.setHorariosDisponiveis(availableHours);
             agenda.setDuracaoConsulta(appointmentDuration);
-            agenda.setUser(user);
+            agenda.setMedico(user);
             user.setMedicoAgenda(agenda); // importantíssimo para persistência em cascata
         }
 

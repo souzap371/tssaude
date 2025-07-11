@@ -16,7 +16,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -39,7 +38,6 @@ public class AppointmentController {
         @Autowired
         private MedicoAgendaService medicoAgendaService;
 
-        // Listar todos os agendamentos
         @GetMapping
         public String listAppointments(Model model) {
                 List<Appointment> appointments = appointmentService.findAll();
@@ -47,14 +45,12 @@ public class AppointmentController {
                 return "appointments/list";
         }
 
-        // Exibir formulário de novo agendamento
         @GetMapping("/new")
         public String showAppointmentForm(Appointment appointment, Model model) {
                 prepararFormulario(model);
                 return "appointments/form";
         }
 
-        // Salvar novo agendamento
         @PostMapping
         public String saveAppointment(@Valid Appointment appointment,
                         BindingResult result,
@@ -68,12 +64,12 @@ public class AppointmentController {
                         return "appointments/form";
                 }
 
-                LocalTime time = LocalTime.parse(appointmentTime);
-                LocalDateTime appointmentDateTime = LocalDateTime.of(appointmentDate, time);
+                LocalDateTime appointmentDateTime = LocalDateTime.of(appointmentDate, LocalTime.parse(appointmentTime));
                 appointment.setAppointmentDateTime(appointmentDateTime);
 
                 Long medicoId = appointment.getDoctor().getId();
                 boolean horarioValido = medicoAgendaService.verificarHorarioValido(medicoId, appointmentDateTime);
+
                 if (!horarioValido) {
                         result.rejectValue("appointmentDateTime", "error.appointment",
                                         "Horário inválido para este médico.");
@@ -84,13 +80,12 @@ public class AppointmentController {
                 String username = authentication.getName();
                 User receptionist = userService.findByUsername(username)
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
-                appointment.setReceptionist(receptionist);
 
+                appointment.setReceptionist(receptionist);
                 appointmentService.save(appointment);
                 return "redirect:/appointments";
         }
 
-        // Exibir formulário de edição
         @GetMapping("/edit/{id}")
         public String showEditForm(@PathVariable("id") Long id, Model model) {
                 Appointment appointment = appointmentService.findById(id)
@@ -100,7 +95,6 @@ public class AppointmentController {
                 return "appointments/form";
         }
 
-        // Atualizar agendamento
         @PostMapping("/{id}")
         public String updateAppointment(@PathVariable("id") Long id,
                         @Valid Appointment appointment,
@@ -115,13 +109,13 @@ public class AppointmentController {
                         return "appointments/form";
                 }
 
-                LocalTime time = LocalTime.parse(appointmentTime);
-                LocalDateTime appointmentDateTime = LocalDateTime.of(appointmentDate, time);
+                LocalDateTime appointmentDateTime = LocalDateTime.of(appointmentDate, LocalTime.parse(appointmentTime));
                 appointment.setId(id);
                 appointment.setAppointmentDateTime(appointmentDateTime);
 
                 Long medicoId = appointment.getDoctor().getId();
                 boolean horarioValido = medicoAgendaService.verificarHorarioValido(medicoId, appointmentDateTime);
+
                 if (!horarioValido) {
                         result.rejectValue("appointmentDateTime", "error.appointment",
                                         "Horário inválido para este médico.");
@@ -133,14 +127,12 @@ public class AppointmentController {
                 return "redirect:/appointments";
         }
 
-        // Excluir agendamento
         @GetMapping("/delete/{id}")
         public String deleteAppointment(@PathVariable("id") Long id) {
                 appointmentService.deleteById(id);
                 return "redirect:/appointments";
         }
 
-        // AJAX: retorna horários disponíveis para um médico e data específica
         @GetMapping("/horarios-disponiveis")
         @ResponseBody
         public List<String> getHorariosDisponiveis(@RequestParam("medicoId") Long medicoId,
@@ -148,37 +140,27 @@ public class AppointmentController {
                 return medicoAgendaService.getHorariosDisponiveis(medicoId, data);
         }
 
-        // ✅ NOVO ENDPOINT: retorna dias da semana e horários disponíveis para um médico
+        // ✅ Atualizado para refletir a nova estrutura da entidade MedicoAgenda
         @GetMapping("/doctors/{id}/availability")
         @ResponseBody
         public Map<String, Object> getDisponibilidadeMedico(@PathVariable("id") Long medicoId) {
                 Map<String, Object> disponibilidade = new HashMap<>();
 
                 List<MedicoAgenda> agendas = medicoAgendaService.getAgendasByMedicoId(medicoId);
+                if (agendas.isEmpty()) {
+                        disponibilidade.put("availableDays", Collections.emptyList());
+                        disponibilidade.put("availableHours", Collections.emptyList());
+                        return disponibilidade;
+                }
 
-                Set<String> dias = agendas.stream()
-                                .map(new java.util.function.Function<MedicoAgenda, String>() {
-                                        @Override
-                                        public String apply(MedicoAgenda a) {
-                                                return traduzirDiaSemana(a.getDiaSemana());
-                                        }
-                                })
-                                .collect(Collectors.toSet());
+                MedicoAgenda agenda = agendas.get(0); // como o relacionamento é 1:1, deve haver apenas uma agenda
 
-                Set<String> horarios = agendas.stream()
-                                .flatMap(a -> a.getHorariosDisponiveis().stream()) // pega todos os horários da lista
-                                .collect(Collectors.toSet());
-
-                disponibilidade.put("availableDays", dias);
-                disponibilidade.put("availableHours", horarios);
-
-                // System.out.println("Dias disponíveis: " + dias);
-                // System.out.println("Horários disponíveis: " + horarios);
+                disponibilidade.put("availableDays", agenda.getDiasAtendimento());
+                disponibilidade.put("availableHours", agenda.getHorariosDisponiveis());
 
                 return disponibilidade;
         }
 
-        // Utilitário
         private void prepararFormulario(Model model) {
                 model.addAttribute("patients", patientService.findAll());
                 List<User> doctors = userService.findAll().stream()
@@ -186,17 +168,4 @@ public class AppointmentController {
                                 .toList();
                 model.addAttribute("doctors", doctors);
         }
-
-        private String traduzirDiaSemana(DayOfWeek dia) {
-                return switch (dia) {
-                        case MONDAY -> "Segunda";
-                        case TUESDAY -> "Terça";
-                        case WEDNESDAY -> "Quarta";
-                        case THURSDAY -> "Quinta";
-                        case FRIDAY -> "Sexta";
-                        case SATURDAY -> "Sábado";
-                        case SUNDAY -> "Domingo";
-                };
-        }
-
 }

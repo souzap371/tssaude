@@ -1,90 +1,48 @@
 package com.ts.saude.model;
 
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.DayOfWeek;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.*;
-
 @Entity
+@Table(name = "medico_agenda")
+@Getter
+@Setter
+@NoArgsConstructor
 public class MedicoAgenda {
-
-    @ManyToOne
-    @JoinColumn(name = "medico_id")
-    private User medico; // ou Medico, dependendo do seu modelo
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "dia_da_semana")
-    private DayOfWeek diaSemana;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "duracao_da_consulta")
-    private Integer duracaoConsulta; // em minutos
+    // Duração padrão das consultas do médico (em minutos)
+    @Column(name = "duracao_consulta")
+    private Integer duracaoConsulta;
 
+    // Dias da semana que o médico atende (Segunda, Terça, etc.)
     @ElementCollection
-    @CollectionTable(name = "medico_dias_atendimento", joinColumns = @JoinColumn(name = "medico_agenda_id"))
+    @CollectionTable(name = "medico_dias_atendimento", joinColumns = @JoinColumn(name = "agenda_id"))
     @Column(name = "dia")
-    private List<String> diasAtendimento; // Segunda, Terça, etc.
+    private List<String> diasAtendimento;
 
+    // Horários disponíveis por dia (08:00, 08:30, etc.)
     @ElementCollection
-    @CollectionTable(name = "medico_horarios", joinColumns = @JoinColumn(name = "medico_agenda_id"))
+    @CollectionTable(name = "medico_horarios_disponiveis", joinColumns = @JoinColumn(name = "agenda_id"))
     @Column(name = "horario")
-    private List<String> horariosDisponiveis; // 08:00, 08:30, etc.
+    private List<String> horariosDisponiveis = new ArrayList<>();
 
+    // Dia da semana específico (para validação por dia)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "dia_semana")
+    private DayOfWeek diaSemana;
+
+    // Relacionamento com o usuário (médico)
     @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    // Getters e Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Integer getDuracaoConsulta() {
-        return duracaoConsulta;
-    }
-
-    public void setDuracaoConsulta(Integer duracaoConsulta) {
-        this.duracaoConsulta = duracaoConsulta;
-    }
-
-    public List<String> getDiasAtendimento() {
-        return diasAtendimento;
-    }
-
-    public void setDiasAtendimento(List<String> diasAtendimento) {
-        this.diasAtendimento = diasAtendimento;
-    }
-
-    public List<String> getHorariosDisponiveis() {
-        return horariosDisponiveis;
-    }
-
-    public void setHorariosDisponiveis(List<String> horariosDisponiveis) {
-        this.horariosDisponiveis = horariosDisponiveis;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public DayOfWeek getDiaSemana() {
-        return this.diaSemana;
-    }
-
-    // public LocalDateTime getHora() {
-    // // TODO Auto-generated method stub
-    // throw new UnsupportedOperationException("Unimplemented method 'getHora'");
-    // }
+    @JoinColumn(name = "user_id", unique = true)
+    private User medico;
 }

@@ -262,30 +262,42 @@
                 <!-- Duração da Consulta -->
                 <div>
                     <label for="appointmentDuration">Duração da Consulta (min):</label>
-                    <input type="number" id="appointmentDuration" name="appointmentDuration" placeholder="Ex: 30"
-                        min="5" step="5" onchange="generateTimeSlots()" />
+                    <input type="number" id="appointmentDuration" name="medicoAgenda.duracaoConsulta"
+                        th:field="*{medicoAgenda.duracaoConsulta}" placeholder="Ex: 30" min="5" step="5"
+                        onchange="generateTimeSlots()" />
                 </div>
 
                 <!-- Dias de atendimento -->
                 <div>
                     <label>Dias de Atendimento:</label>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                        <label><input type="checkbox" name="availableDays" value="Segunda">Segunda</label>
-                        <label><input type="checkbox" name="availableDays" value="Terça">Terça</label>
-                        <label><input type="checkbox" name="availableDays" value="Quarta">Quarta</label>
-                        <label><input type="checkbox" name="availableDays" value="Quinta">Quinta</label>
-                        <label><input type="checkbox" name="availableDays" value="Sexta">Sexta</label>
-                        <label><input type="checkbox" name="availableDays" value="Sábado">Sábado</label>
-                        <label><input type="checkbox" name="availableDays" value="Domingo">Domingo</label>
+                        <label><input type="checkbox" name="medicoAgenda.diasAtendimento" th:value="'Segunda'"
+                                th:field="*{medicoAgenda.diasAtendimento}" />Segunda</label>
+                        <label><input type="checkbox" name="medicoAgenda.diasAtendimento" th:value="'Terça'"
+                                th:field="*{medicoAgenda.diasAtendimento}" />Terça</label>
+                        <label><input type="checkbox" name="medicoAgenda.diasAtendimento" th:value="'Quarta'"
+                                th:field="*{medicoAgenda.diasAtendimento}" />Quarta</label>
+                        <label><input type="checkbox" name="medicoAgenda.diasAtendimento" th:value="'Quinta'"
+                                th:field="*{medicoAgenda.diasAtendimento}" />Quinta</label>
+                        <label><input type="checkbox" name="medicoAgenda.diasAtendimento" th:value="'Sexta'"
+                                th:field="*{medicoAgenda.diasAtendimento}" />Sexta</label>
+                        <label><input type="checkbox" name="medicoAgenda.diasAtendimento" th:value="'Sábado'"
+                                th:field="*{medicoAgenda.diasAtendimento}" />Sábado</label>
+                        <label><input type="checkbox" name="medicoAgenda.diasAtendimento" th:value="'Domingo'"
+                                th:field="*{medicoAgenda.diasAtendimento}" />Domingo</label>
                     </div>
                 </div>
 
                 <!-- Horários disponíveis -->
-                <div>
-                    <label>Horários Disponíveis:</label>
-                    <div id="timeSlotsContainer" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+                <div id="timeSlotsContainer" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <label th:each="hora : ${user.medicoAgenda != null ? user.medicoAgenda.horariosDisponiveis : {}}"
+                        th:if="${user.medicoAgenda != null}">
+                        <input type="checkbox" th:field="*{medicoAgenda.horariosDisponiveis}" th:value="${hora}" />
+                        <span th:text="${hora}"></span>
+                    </label>
                 </div>
             </div>
+
 
 
             <div>

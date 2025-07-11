@@ -1,25 +1,12 @@
 package com.ts.saude.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.security.core.userdetails.UserDetails;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.JoinColumn;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.*;
 
@@ -29,9 +16,6 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 public class User implements UserDetails {
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private MedicoAgenda medicoAgenda;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -46,26 +30,28 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String fullName;
 
+    // Perfis de acesso
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
-    // Construtor simplificado
+    // Relacionamento com a agenda médica (se for médico)
+    @OneToOne(mappedBy = "medico", cascade = CascadeType.ALL, orphanRemoval = true)
+    private MedicoAgenda medicoAgenda;
+
+    // Construtor simples
     public User(String username, String password, String fullName) {
         this.username = username;
         this.password = password;
         this.fullName = fullName;
     }
 
-    // Métodos do UserDetails (Spring Security)
-
+    // Implementações do Spring Security
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Set<SimpleGrantedAuthority> authorities = new HashSet<>();
-        for (Role role : roles) {
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
-        }
-        return authorities;
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .toList();
     }
 
     @Override
@@ -87,6 +73,4 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
-    // Os getters de username e password já existem via Lombok
 }

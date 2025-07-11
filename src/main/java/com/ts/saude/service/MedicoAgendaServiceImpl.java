@@ -27,7 +27,7 @@ public class MedicoAgendaServiceImpl implements MedicoAgendaService {
         DayOfWeek diaSemana = data.getDayOfWeek();
 
         return medicoAgendaRepository
-                .findByMedicoIdAndDiaSemana(medicoId, diaSemana)
+                .findByMedico_IdAndDiaSemana(medicoId, diaSemana)
                 .stream()
                 .flatMap(a -> a.getHorariosDisponiveis().stream()) // pegar todos os horários
                 .distinct() // para evitar duplicidade
@@ -36,6 +36,6 @@ public class MedicoAgendaServiceImpl implements MedicoAgendaService {
 
     @Override
     public List<MedicoAgenda> getAgendasByMedicoId(Long medicoId) {
-        return medicoAgendaRepository.findByMedicoId(medicoId);
+        return medicoAgendaRepository.findByMedico_Id(medicoId);
     }
 }
