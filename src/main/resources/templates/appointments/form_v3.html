@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Agenda MKSaúde</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <style>
+        /* ... seu CSS existente ... */
+        /* Adicione estilo para destacar dias disponíveis */
+        .calendar td.available {
+            background-color: #4caf50;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .calendar td.selected {
+            background-color: #2e7d32;
+            color: white;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+
+        /* Horários disponíveis na área principal */
+        #horariosDisponiveis {
+            padding: 20px;
+            background: #fff;
+            border-radius: 6px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #horariosDisponiveis button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            background: #4caf50;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        #horariosDisponiveis button.selected {
+            background: #2e7d32;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="scheduler-container">
+
+        <aside class="sidebar">
+            <!-- Seleção do Médico -->
+            <div class="filter-group">
+                <label for="medicoSelect">Selecione o Médico</label>
+                <select id="medicoSelect" name="doctor.id" required>
+                    <option value="" disabled selected>Selecione um médico</option>
+                    <option th:each="m : ${doctors}" th:value="${m.id}" th:text="${m.fullName}"></option>
+                </select>
+            </div>
+
+            <!-- Calendário -->
+            <div class="calendar">
+                <div class="month-nav">
+                    <button onclick="prevMonth()">&lt;</button>
+                    <span id="currentMonth" th:text="${currentMonth}"></span>
+                    <button onclick="nextMonth()">&gt;</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dom</th>
+                            <th>Seg</th>
+                            <th>Ter</th>
+                            <th>Qua</th>
+                            <th>Qui</th>
+                            <th>Sex</th>
+                            <th>Sáb</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody" th:utext="${calendarHtml}"></tbody>
+                </table>
+            </div>
+        </aside>
+
+        <section class="main">
+            <h2>Horários Disponíveis</h2>
+            <div id="horariosDisponiveis">
+                <p>Selecione um médico e um dia no calendário para ver os horários disponíveis.</p>
+            </div>
+
+            <!-- Formulário de agendamento, aparecerá após escolher horário -->
+            <form id="agendamentoForm" method="post" th:action="@{/appointments}"
+                style="display:none; margin-top:20px;">
+                <input type="hidden" name="doctor.id" id="formDoctorId" />
+                <input type="hidden" name="appointmentDate" id="formAppointmentDate" />
+                <input type="hidden" name="appointmentTime" id="formAppointmentTime" />
+                <div class="filter-group">
+                    <label for="patientSelect">Paciente</label>
+                    <select id="patientSelect" name="patient.id" required>
+                        <option value="" disabled selected>Selecione o paciente</option>
+                        <option th:each="p : ${patients}" th:value="${p.id}" th:text="${p.fullName}"></option>
+                    </select>
+                </div>
+                <button type="submit">Agendar</button>
+            </form>
+        </section>
+
+    </div>
+
+    <script>
+        // Variáveis globais
+        let selectedMedicoId = null;
+        let selectedDate = null;
+        let selectedHorario = null;
+
+        const medicoSelect = document.getElementById('medicoSelect');
+        const calendarBody = document.getElementById('calendarBody');
+        const horariosDiv = document.getElementById('horariosDisponiveis');
+        const agendamentoForm = document.getElementById('agendamentoForm');
+        const formDoctorId = document.getElementById('formDoctorId');
+        const formAppointmentDate = document.getElementById('formAppointmentDate');
+        const formAppointmentTime = document.getElementById('formAppointmentTime');
+
+        medicoSelect.addEventListener('change', () => {
+            selectedMedicoId = medicoSelect.value;
+            selectedDate = null;
+            selectedHorario = null;
+            clearHorarios();
+            carregarCalendario();
+            agendamentoForm.style.display = 'none';
+        });
+
+        // Função para desenhar calendário — 
+        // essa função deve ser ajustada para criar o calendário dinamicamente com os dias do mês
+        // e marcar os dias disponíveis do médico (baseado em variável disponível do backend, por exemplo 'availableDays')
+        function carregarCalendario() {
+            // Para simplificar, suponha que o backend envie 'availableDays' como array de strings ISO 'YYYY-MM-DD'
+            // Você pode substituir calendarBody.innerHTML pelo HTML já gerado pelo backend (th:utext="${calendarHtml}")
+            // Aqui é um exemplo simples, o ideal é ajustar conforme sua implementação.
+
+            // Exemplo básico: Limpar o calendário
+            calendarBody.innerHTML = '';
+
+            // TODO: implementar calendário dinâmico com dias do mês e marcação de disponíveis
+
+            // Como você já tem calendarHtml do backend (variável Thymeleaf), mantenha essa parte.
+            // Para realçar os dias disponíveis, utilize uma classe CSS, ex: "available"
+            // E adicione onclick para selecionar o dia.
+
+            // Para o exemplo, aqui escutaremos clicks em dias com a classe "available"
+            Array.from(document.querySelectorAll('.calendar td.available')).forEach(td => {
+                td.addEventListener('click', () => {
+                    const diaSelecionado = td.getAttribute('data-date'); // supondo que seu backend adiciona data-date="2025-07-30"
+                    if (!diaSelecionado) return;
+                    selecionarDia(diaSelecionado, td);
+                });
+            });
+        }
+
+        // Chamado ao clicar em dia disponível no calendário
+        function selecionarDia(data, tdElement) {
+            selectedDate = data;
+            selectedHorario = null;
+            highlightSelectedDay(tdElement);
+            carregarHorariosDisponiveis();
+            agendamentoForm.style.display = 'none';
+        }
+
+        // Marca o dia selecionado no calendário visualmente
+        function highlightSelectedDay(tdElement) {
+            // Remove seleção antiga
+            document.querySelectorAll('.calendar td.selected').forEach(el => el.classList.remove('selected'));
+            tdElement.classList.add('selected');
+        }
+
+        // Busca os horários disponíveis para o médico e dia selecionados
+        async function carregarHorariosDisponiveis() {
+            if (!selectedMedicoId || !selectedDate) {
+                horariosDiv.innerHTML = '<p>Selecione médico e dia disponível no calendário.</p>';
+                return;
+            }
+
+            horariosDiv.innerHTML = '<p>Carregando horários...</p>';
+
+            try {
+                const response = await fetch(`/appointments/horarios-disponiveis?medicoId=${selectedMedicoId}&data=${selectedDate}`);
+                if (!response.ok) throw new Error('Erro ao carregar horários');
+                const horarios = await response.json();
+
+                if (horarios.length === 0) {
+                    horariosDiv.innerHTML = '<p>Nenhum horário disponível para este dia.</p>';
+                    return;
+                }
+
+                horariosDiv.innerHTML = '';
+                horarios.forEach(horario => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.textContent = horario;
+                    btn.onclick = () => {
+                        selecionarHorario(horario, btn);
+                    };
+                    horariosDiv.appendChild(btn);
+                });
+            } catch (error) {
+                horariosDiv.innerHTML = `<p>Erro ao carregar horários: ${error.message}</p>`;
+            }
+        }
+
+        // Seleciona o horário e mostra o formulário de agendamento
+        function selecionarHorario(horario, btnElement) {
+            selectedHorario = horario;
+
+            // Remove seleção anterior
+            horariosDiv.querySelectorAll('button').forEach(btn => btn.classList.remove('selected'));
+            btnElement.classList.add('selected');
+
+            // Preenche campos ocultos do formulário
+            formDoctorId.value = selectedMedicoId;
+            formAppointmentDate.value = selectedDate;
+            formAppointmentTime.value = selectedHorario;
+
+            // Exibe o formulário
+            agendamentoForm.style.display = 'block';
+
+            // Scroll até o formulário (opcional)
+            agendamentoForm.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Inicialize calendário e evento de seleção
+        document.addEventListener('DOMContentLoaded', () => {
+            carregarCalendario();
+        });
+
+    </script>
+</body>
+
+</html>

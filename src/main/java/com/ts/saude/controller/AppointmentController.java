@@ -51,6 +51,22 @@ public class AppointmentController {
                 return "appointments/form";
         }
 
+        @GetMapping("/agenda")
+        public String carregarAgenda(Model model) {
+                List<User> profissionais = userService.findAll().stream()
+                                .filter(u -> u.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_DOCTOR")))
+                                .collect(Collectors.toList());
+
+                model.addAttribute("profissionais", profissionais);
+                // model.addAttribute("especialidades", especialidadeService.findAll());
+                // model.addAttribute("salas", salaService.findAll());
+                // model.addAttribute("convenios", convenioService.findAll());
+                model.addAttribute("selectedDate", LocalDate.now());
+                model.addAttribute("currentMonth", LocalDate.now().getMonth().toString());
+
+                return "appointments/form"; // nome do HTML
+        }
+
         @PostMapping
         public String saveAppointment(@Valid Appointment appointment,
                         BindingResult result,
@@ -168,4 +184,5 @@ public class AppointmentController {
                                 .toList();
                 model.addAttribute("doctors", doctors);
         }
+
 }

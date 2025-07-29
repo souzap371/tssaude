@@ -21,5 +21,6 @@ public interface MedicoAgendaRepository extends JpaRepository<MedicoAgenda, Long
     List<MedicoAgenda> findByMedico_Id(Long medicoId);
 
     // Buscar por ID do médico e dia da semana
-    List<MedicoAgenda> findByMedico_IdAndDiaSemana(Long medicoId, DayOfWeek diaSemana);
+    // List<MedicoAgenda> findByMedico_IdAndDiaSemana(Long medicoId, DayOfWeek
+    // diaSemana);
 }

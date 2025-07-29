@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8" />
+    <title th:text="${appointment.id == null} ? 'Novo Agendamento' : 'Editar Agendamento'">Formulário Agendamento
+    </title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: white;
+            padding: 10px 30px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .left-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo {
+            max-width: 80px;
+            height: auto;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav li {
+            position: relative;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            padding: 8px 12px;
+            display: block;
+        }
+
+        nav a:hover {
+            background-color: #e0e0e0;
+            border-radius: 5px;
+        }
+
+        nav ul ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: white;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        nav ul li:hover>ul {
+            display: block;
+        }
+
+        .profile-container {
+            position: relative;
+        }
+
+        .profile-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .profile-menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            z-index: 1000;
+            min-width: 160px;
+        }
+
+        .profile-menu a {
+            display: block;
+            padding: 10px;
+            text-decoration: none;
+            color: #333;
+        }
+
+        .profile-menu a:hover {
+            background-color: #f0f0f0;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        form {
+            width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        form div {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #1a252f;
+        }
+
+        #calendar {
+            flex: 1;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .green-text {
+            color: green;
+            font-weight: bold;
+        }
+
+        footer {
+            background-color: white;
+            text-align: center;
+            padding: 20px;
+            color: #333;
+            font-size: 1em;
+            border-top: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="left-header">
+            <div class="logo-container">
+                <img th:src="@{/images/logo.png}" alt="Logo" class="logo" />
+            </div>
+            <nav>
+                <ul>
+                    <li><a th:href="@{/}">Início</a></li>
+                    <li>
+                        <a href="#">Pacientes</a>
+                        <ul>
+                            <li><a th:href="@{/patients/new}">Novo Paciente</a></li>
+                            <li><a th:href="@{/patients}">Listar Pacientes</a></li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="#">Agendamentos</a>
+                        <ul>
+                            <li><a th:href="@{/appointments/new}">Novo Agendamento</a></li>
+                            <li><a th:href="@{/appointments}">Listar Agendamentos</a></li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_DOCTOR')">
+                        <a href="#">Evoluções</a>
+                        <ul>
+                            <li><a th:href="@{/medicalrecords?patientId=1}">Visualizar Evoluções</a></li>
+                        </ul>
+                    </li>
+                    <li sec:authorize="hasRole('ROLE_ADMIN')">
+                        <a href="#">Usuários</a>
+                        <ul>
+                            <li><a th:href="@{/users/new}">Novo Usuário</a></li>
+                            <li><a th:href="@{/users}">Listar Usuários</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="profile-container">
+            <img th:src="@{/images/perfil.png}" alt="Perfil" class="profile-icon" onclick="toggleProfileMenu()" />
+            <div class="profile-menu" id="profileMenu">
+                <span style="display: block; padding: 10px; font-weight: bold; color: #2c3e50;">
+                    <span sec:authorize="hasRole('ROLE_ADMIN')">Perfil: Administrador</span>
+                    <span sec:authorize="hasRole('ROLE_RECEPTIONIST')">Perfil: Recepcionista</span>
+                    <span sec:authorize="hasRole('ROLE_DOCTOR')">Perfil: Médico</span>
+                </span>
+                <a th:href="@{/logout}">Sair</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- Formulário na coluna esquerda -->
+        <form th:action="${appointment.id == null} ? @{/appointments} : @{/appointments/{id}(id=${appointment.id})}"
+            th:object="${appointment}" method="post">
+
+            <div>
+                <label for="patientSelect">Paciente:</label>
+                <select id="patientSelect" th:field="*{patient.id}">
+                    <option value="" disabled>Selecione</option>
+                    <option th:each="p : ${patients}" th:value="${p.id}" th:text="${p.name}"></option>
+                </select>
+            </div>
+
+            <div>
+                <label for="doctorSelect">Médico:</label>
+                <select id="doctorSelect" th:field="*{doctor.id}" onchange="updateCalendar()">
+                    <option value="" disabled>Selecione</option>
+                    <option th:each="d : ${doctors}" th:value="${d.id}" th:text="${d.fullName}"></option>
+                </select>
+            </div>
+
+            <div>
+                <label for="appointmentDateTime">Data e Hora:</label>
+                <input id="appointmentDateTime" type="datetime-local" th:field="*{appointmentDateTime}" required />
+            </div>
+
+            <div>
+                <label for="statusSelect">Status:</label>
+                <select id="statusSelect" th:field="*{status}">
+                    <option value="" disabled>Selecione</option>
+                    <option th:each="s : ${T(com.ts.saude.model.Appointment$AppointmentStatus).values()}"
+                        th:value="${s}" th:text="${s.name()}"></option>
+                </select>
+            </div>
+
+            <div>
+                <button type="submit" th:text="${appointment.id == null} ? 'Agendar' : 'Atualizar'"></button>
+                <a th:href="@{/appointments}" style="margin-left: 10px;">Cancelar</a>
+            </div>
+        </form>
+
+        <!-- Agenda à direita -->
+        <div id="calendar">
+            <h3>Agenda do Médico</h3>
+            <div id="availability">Selecione um médico para visualizar a agenda.</div>
+        </div>
+    </main>
+
+    <footer>
+        <p>Bem-vindo(a) ao TS SAÚDE. <br />Selecione uma das opções no menu acima.</p>
+    </footer>
+
+    <script>
+        function toggleProfileMenu() {
+            const menu = document.getElementById("profileMenu");
+            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        }
+
+        document.addEventListener("click", function (event) {
+            const menu = document.getElementById("profileMenu");
+            const profileIcon = document.querySelector(".profile-icon");
+            if (!menu.contains(event.target) && !profileIcon.contains(event.target)) {
+                menu.style.display = "none";
+            }
+        });
+
+        function updateCalendar() {
+            const doctorSelect = document.getElementById('doctorSelect');
+            const doctorId = doctorSelect.value;
+            const availabilityDiv = document.getElementById('availability');
+
+            if (!doctorId || doctorId === "{id}") {
+                availabilityDiv.innerHTML = 'Selecione um médico válido para visualizar a agenda.';
+                return;
+            }
+
+            console.log('Doctor ID selecionado:', doctorId); // Para debug no console
+
+            fetch(`/appointments/doctors/${doctorId}/availability`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na resposta da API');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Dados recebidos:', data);
+                    if (!data.availableDays || !data.availableHours) {
+                        availabilityDiv.innerHTML = 'Nenhuma disponibilidade encontrada para este médico.';
+                        return;
+                    }
+                    let html = '<p><strong>Dias Disponíveis:</strong></p><ul>';
+                    data.availableDays.forEach(day => {
+                        html += `<li class="green-text">${day}</li>`;
+                    });
+                    html += '</ul><p><strong>Horários:</strong></p><ul>';
+                    data.availableHours.forEach(hour => {
+                        html += `<li class="green-text">${hour}</li>`;
+                    });
+                    html += '</ul>';
+                    availabilityDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar disponibilidade:', error);
+                    availabilityDiv.innerHTML = 'Erro ao carregar disponibilidade.';
+                });
+        }
+
+
+        window.onload = () => {
+            const selectedDoctor = document.getElementById('doctorSelect').value;
+            if (selectedDoctor) updateCalendar();
+        };
+    </script>
+</body>
+
+</html>

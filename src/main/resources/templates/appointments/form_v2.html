@@ -2,11 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Agenda MKSaúde</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
     <style>
-        /* (Aqui mantive seu CSS exatamente igual, para não perder nada) */
         /* Global Reset */
         * {
             margin: 0;
@@ -210,10 +209,8 @@
             <input type="text" placeholder="Pesquisar por nome" id="searchName" oninput="filterSlots()" />
         </div>
     </header>
-
     <div class="scheduler-container">
         <aside class="sidebar">
-            <!-- Calendário e filtros permanecem inalterados -->
             <div class="calendar">
                 <div class="month-nav">
                     <button onclick="prevMonth()">&lt;</button>
@@ -259,28 +256,14 @@
                     <option th:each="e : ${especialidades}" th:value="${e.id}" th:text="${e.nome}"></option>
                 </select>
             </div>
-
-            <!-- Formulário para selecionar médico, data e horário -->
             <div class="filter-group">
-                <label for="medicoSelect">Profissional (Médico)</label>
-                <select id="medicoSelect" name="doctor.id" class="form-control" required>
+                <label for="filterProfissional">Profissional</label>
+                <select name="medico" class="form-control">
                     <option value="" disabled selected>Selecione um médico</option>
                     <option th:each="m : ${doctors}" th:value="${m.id}" th:text="${m.fullName}"></option>
                 </select>
             </div>
-            <div class="filter-group">
-                <label for="appointmentDate">Data</label>
-                <input type="date" id="appointmentDate" name="appointmentDate" th:value="${selectedDate}" required />
-            </div>
-            <div class="filter-group">
-                <label for="appointmentTime">Horário Disponível</label>
-                <select id="appointmentTime" name="appointmentTime" required>
-                    <option value="" disabled selected>Selecione um horário</option>
-                    <!-- Opções serão preenchidas via JS -->
-                </select>
-            </div>
         </aside>
-
         <section class="main">
             <div class="schedule-list" id="scheduleList">
                 <div class="slot" th:each="slot : ${slots}" th:classappend="${slot.confirmado} ? ' confirmed' : ''">
@@ -304,7 +287,6 @@
                 </div>
             </div>
         </section>
-
         <aside class="right-panel">
             <div class="panel-title">Painel Senhas</div>
             <div class="panel-group">
@@ -324,72 +306,55 @@
             </div>
         </aside>
     </div>
-
     <script>
-        // Funções stub mantidas para compatibilidade
-        function prevDay() { }
-        function nextDay() { }
-        function prevMonth() { }
-        function nextMonth() { }
-        function selectDate(date) { }
-        function applyFilters() { }
-        function filterSlots() { }
-        function editSlot(slotId) { }
-        function cancelSlot(slotId) { }
-        function attendSlot(slotId) { }
-        function toggleFreeOnly() { }
-        function refreshPanel() { }
+        function prevDay() {
+            // Logic to go to the previous day
+        }
 
-        // Novo código para carregar horários disponíveis ao selecionar médico ou data
-        document.addEventListener('DOMContentLoaded', function () {
-            const medicoSelect = document.getElementById('medicoSelect');
-            const dataInput = document.getElementById('appointmentDate');
-            const horarioSelect = document.getElementById('appointmentTime');
+        function nextDay() {
+            // Logic to go to the next day
+        }
 
-            async function carregarHorariosDisponiveis() {
-                const medicoId = medicoSelect.value;
-                const data = dataInput.value;
+        function prevMonth() {
+            // Logic to go to the previous month
+        }
 
-                if (medicoId && data) {
-                    try {
-                        const response = await fetch(`/appointments/horarios-disponiveis?medicoId=${medicoId}&data=${data}`);
-                        if (!response.ok) throw new Error('Erro ao buscar horários');
+        function nextMonth() {
+            // Logic to go to the next month
+        }
 
-                        const horarios = await response.json();
+        function selectDate(date) {
+            // Logic to select a date and refresh the slots
+        }
 
-                        horarioSelect.innerHTML = '<option value="" disabled selected>Selecione um horário</option>';
+        function applyFilters() {
+            // Logic to apply filters based on selected options
+        }
 
-                        if (horarios.length === 0) {
-                            const option = document.createElement('option');
-                            option.value = "";
-                            option.text = "Nenhum horário disponível";
-                            option.disabled = true;
-                            horarioSelect.appendChild(option);
-                        } else {
-                            horarios.forEach(horario => {
-                                const option = document.createElement('option');
-                                option.value = horario;
-                                option.text = horario;
-                                horarioSelect.appendChild(option);
-                            });
-                        }
-                    } catch (error) {
-                        console.error(error);
-                        horarioSelect.innerHTML = '<option value="" disabled selected>Erro ao carregar horários</option>';
-                    }
-                } else {
-                    horarioSelect.innerHTML = '<option value="" disabled selected>Selecione médico e data</option>';
-                }
-            }
+        function filterSlots() {
+            // Logic to filter slots by patient name
+        }
 
-            medicoSelect.addEventListener('change', carregarHorariosDisponiveis);
-            dataInput.addEventListener('change', carregarHorariosDisponiveis);
+        function editSlot(slotId) {
+            // Logic to edit a slot
+        }
 
-            // Carregar horários inicialmente se já tiver dados preenchidos
-            if (medicoSelect.value && dataInput.value) {
-                carregarHorariosDisponiveis();
-            }
-        });
+        function cancelSlot(slotId) {
+            // Logic to cancel a slot
+        }
+
+        function attendSlot(slotId) {
+            // Logic to mark a slot as attended
+        }
+
+        function toggleFreeOnly() {
+            // Logic to toggle showing only free slots
+        }
+
+        function refreshPanel() {
+            // Logic to refresh the right panel with updated data
+        }
+        // JS stubs: prevDay(), nextDay(), prevMonth(), nextMonth(), selectDate(), applyFilters(), filterSlots(), editSlot(), cancelSlot(), attendSlot(), refreshPanel()
     </script>
 </body>
 
