@@ -6,6 +6,8 @@ import com.ts.saude.service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,4 +50,19 @@ public class AppointmentServiceImpl implements AppointmentService {
     public List<Appointment> findByDoctorId(Long doctorId) {
         return appointmentRepository.findByDoctorId(doctorId);
     }
+
+    // @Override
+    // public List<Appointment> findByDoctorAndDate(Long medicoId, LocalDate data) {
+    // // TODO Auto-generated method stub
+    // throw new UnsupportedOperationException("Unimplemented method
+    // 'findByDoctorAndDate'");
+    // }
+
+    @Override
+    public List<Appointment> findByDoctorAndDate(Long medicoId, LocalDate data) {
+        LocalDateTime startOfDay = data.atStartOfDay();
+        LocalDateTime endOfDay = data.atTime(23, 59, 59);
+        return appointmentRepository.findByDoctorIdAndAppointmentDateTimeBetween(medicoId, startOfDay, endOfDay);
+    }
+
 }

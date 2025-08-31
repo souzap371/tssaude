@@ -352,12 +352,6 @@
                     <option th:each="m : ${doctors}" th:value="${m.id}" th:text="${m.fullName}"
                         th:selected="${medicoId} == ${m.id}"></option>
                 </select>
-                <!-- <select id="medicoSelect" name="medicoId" class="form-control">
-                    <option value="">Selecione um médico</option>
-                    <th:block th:each="doctor : ${doctors}">
-                        <option th:value="${doctor.id}" th:text="${doctor.fullName}"></option>
-                    </th:block>
-                </select> -->
             </div>
 
             <div class="filter-group">

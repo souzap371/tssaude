@@ -26,21 +26,23 @@ public class MedicoAgendaServiceImpl implements MedicoAgendaService {
     // public List<String> getHorariosDisponiveis(Long medicoId, LocalDate data) {
     // DayOfWeek diaSemana = data.getDayOfWeek();
 
-    // return medicoAgendaRepository
-    // .findByMedico_IdAndDiaSemana(medicoId, diaSemana)
-    // .stream()
-    // .flatMap(a -> a.getHorariosDisponiveis().stream()) // pegar todos os horários
-    // .distinct() // para evitar duplicidade
+    // List<MedicoAgenda> agendas =
+    // medicoAgendaRepository.findByMedico_Id(medicoId);
+
+    // return agendas.stream()
+    // .filter(a -> a.getDiasAtendimento().contains(diaSemana)) // filtra as agendas
+    // que tem o dia
+    // .flatMap(a -> a.getHorariosDisponiveis().stream())
+    // .distinct()
     // .collect(Collectors.toList());
     // }
+
     @Override
     public List<String> getHorariosDisponiveis(Long medicoId, LocalDate data) {
         DayOfWeek diaSemana = data.getDayOfWeek();
 
-        List<MedicoAgenda> agendas = medicoAgendaRepository.findByMedico_Id(medicoId);
-
-        return agendas.stream()
-                .filter(a -> a.getDiasAtendimento().contains(diaSemana)) // filtra as agendas que tem o dia
+        return medicoAgendaRepository.findByMedico_Id(medicoId).stream()
+                .filter(a -> a.getDiasAtendimento().contains(diaSemana.name())) // <- corrigido
                 .flatMap(a -> a.getHorariosDisponiveis().stream())
                 .distinct()
                 .collect(Collectors.toList());

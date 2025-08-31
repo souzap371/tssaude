@@ -1,5 +1,7 @@
 package com.ts.saude.controller;
 
+import com.ts.saude.dto.CalendarUtils;
+import com.ts.saude.dto.SlotDTO;
 import com.ts.saude.model.Appointment;
 import com.ts.saude.model.MedicoAgenda;
 import com.ts.saude.model.User;
@@ -16,9 +18,11 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.TextStyle;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,19 +56,66 @@ public class AppointmentController {
         }
 
         @GetMapping("/agenda")
-        public String carregarAgenda(Model model) {
+        public String carregarAgenda(Model model,
+                        @RequestParam(value = "data", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+                        @RequestParam(value = "medicoId", required = false) Long medicoId,
+                        @RequestParam(value = "month", required = false) Integer month,
+                        @RequestParam(value = "year", required = false) Integer year) {
+
+                LocalDate hoje = LocalDate.now();
+                LocalDate dataRef;
+
+                if (data != null) {
+                        dataRef = data;
+                } else if (month != null && year != null) {
+                        dataRef = LocalDate.of(year, month, 1);
+                } else {
+                        dataRef = hoje;
+                }
+
+                // Lista de médicos
                 List<User> profissionais = userService.findAll().stream()
                                 .filter(u -> u.getRoles().stream().anyMatch(r -> r.getName().equals("ROLE_DOCTOR")))
-                                .collect(Collectors.toList());
+                                .toList();
+
+                // Slots disponíveis
+                List<SlotDTO> slots = new ArrayList<>();
+                if (medicoId != null) {
+                        List<String> horarios = medicoAgendaService.getHorariosDisponiveis(medicoId, dataRef);
+                        for (String horario : horarios) {
+                                slots.add(new SlotDTO(
+                                                horario,
+                                                false,
+                                                "",
+                                                "",
+                                                null));
+                        }
+
+                        // Slots já agendados
+                        List<Appointment> agendados = appointmentService.findByDoctorAndDate(medicoId, dataRef);
+                        for (Appointment a : agendados) {
+                                slots.add(new SlotDTO(
+                                                a.getAppointmentDateTime().toLocalTime().toString(),
+                                                true,
+                                                a.getPatient().getName(),
+                                                a.getDoctor().getFullName(),
+                                                a.getId()));
+                        }
+
+                        // Ordenar por hora
+                        slots.sort(Comparator.comparing(SlotDTO::getHora));
+                }
 
                 model.addAttribute("profissionais", profissionais);
-                // model.addAttribute("especialidades", especialidadeService.findAll());
-                // model.addAttribute("salas", salaService.findAll());
-                // model.addAttribute("convenios", convenioService.findAll());
-                model.addAttribute("selectedDate", LocalDate.now());
-                model.addAttribute("currentMonth", LocalDate.now().getMonth().toString());
+                model.addAttribute("doctors", profissionais);
+                model.addAttribute("selectedDate", dataRef);
+                model.addAttribute("currentMonth",
+                                dataRef.getMonth().getDisplayName(TextStyle.FULL, new Locale("pt", "BR")));
+                model.addAttribute("calendarWeeks", CalendarUtils.generateCalendar(dataRef));
+                model.addAttribute("slots", slots);
+                model.addAttribute("medicoId", medicoId);
 
-                return "appointments/form"; // nome do HTML
+                return "appointments/form";
         }
 
         @PostMapping
@@ -98,8 +149,14 @@ public class AppointmentController {
                                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado"));
 
                 appointment.setReceptionist(receptionist);
-                appointmentService.save(appointment);
-                return "redirect:/appointments";
+                try {
+                        appointmentService.save(appointment);
+                        return "redirect:/appointments";
+                } catch (IllegalStateException e) {
+                        result.rejectValue("appointmentDateTime", "error.appointment", e.getMessage());
+                        prepararFormulario(model);
+                        return "appointments/form";
+                }
         }
 
         @GetMapping("/edit/{id}")
@@ -170,6 +227,22 @@ public class AppointmentController {
                 }
 
                 MedicoAgenda agenda = agendas.get(0); // como o relacionamento é 1:1, deve haver apenas uma agenda
+
+                // Converte dias da semana em datas reais (ex.: próximos 30 dias)
+                // Converte a lista de dias da semana para enums DayOfWeek
+                List<DayOfWeek> diasSemana = agenda.getDiasAtendimento().stream()
+                                .map(DayOfWeek::valueOf) // Se estiver em inglês (MONDAY, TUESDAY)
+                                .collect(Collectors.toList());
+
+                // Gera as próximas 30 datas que batem com esses dias da semana
+                LocalDate hoje = LocalDate.now();
+                List<String> datasDisponiveis = new ArrayList<>();
+                for (int i = 0; i < 30; i++) {
+                        LocalDate dia = hoje.plusDays(i);
+                        if (diasSemana.contains(dia.getDayOfWeek())) {
+                                datasDisponiveis.add(dia.toString()); // yyyy-MM-dd
+                        }
+                }
 
                 disponibilidade.put("availableDays", agenda.getDiasAtendimento());
                 disponibilidade.put("availableHours", agenda.getHorariosDisponiveis());
